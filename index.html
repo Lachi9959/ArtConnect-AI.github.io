@@ -1,0 +1,431 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>ArtConnect AI</title>
+  <!-- Tailwind -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+  <style>
+    :root {
+      --card-bg: rgba(255,255,255,0.75);
+      --glass: blur(14px) saturate(180%);
+    }
+    html, body { height: 100%; font-family: Inter, ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, 'Helvetica Neue', Arial; }
+    .glass-card { backdrop-filter: var(--glass); -webkit-backdrop-filter: var(--glass); background: var(--card-bg); border: 1px solid rgba(148,163,184,.25); }
+    .shadow-elevated { box-shadow: 0 14px 38px rgba(2,6,23,.08); }
+    .chip { @apply text-xs font-medium rounded-full px-3 py-1 bg-indigo-50 text-indigo-700; }
+    .nav-link { @apply hover:text-indigo-600 transition; }
+    .btn-primary { @apply bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl px-5 py-2; }
+    .btn-outline { @apply border border-slate-300 rounded-xl px-5 py-2 hover:bg-slate-100; }
+    .badge { @apply text-[10px] bg-rose-500 text-white px-2 py-0.5 rounded-full; }
+    .hidden-imp { display:none !important; }
+    /* Simple fade */
+    .fade-in { animation: fade .4s ease-in-out; }
+    @keyframes fade { from { opacity: 0; transform: translateY(6px);} to { opacity: 1; transform: translateY(0);} }
+    /* Toast */
+    #toast { position: fixed; right: 1rem; bottom: 1rem; z-index: 60; }
+  </style>
+</head>
+<body class="bg-gradient-to-br from-indigo-50 via-white to-purple-50 min-h-full flex flex-col">
+
+  <!-- Top Nav -->
+  <header class="bg-white/90 backdrop-blur sticky top-0 z-50 border-b">
+    <div class="max-w-7xl mx-auto px-4 md:px-6 py-3 flex items-center gap-4">
+      <a href="#home" class="flex items-center gap-2 font-extrabold text-indigo-600 text-xl"><span></span><span>ArtConnect <span class="text-slate-900">AI  🌐</span></span></a>
+      <form class="hidden md:flex items-center border rounded-xl px-3 py-2 w-full max-w-xl ml-2">
+        <i class="fa fa-search text-slate-500 mr-2"></i>
+        <input id="search" class="w-full outline-none text-sm" placeholder="Search crafts, artisans…" />
+      </form>
+      <nav class="ml-auto flex items-center gap-4 text-sm">
+        <a class="nav-link" href="#home" data-i18n="nav.home">Home</a>
+        <div class="relative group">
+          <button class="nav-link flex items-center gap-1" aria-haspopup="menu"><span data-i18n="nav.categories">Categories</span><i class="fa fa-chevron-down text-[10px]"></i></button>
+          <div class="absolute right-0 mt-2 w-52 glass-card shadow-elevated rounded-xl p-2 hidden group-hover:block">
+            <a href="#grid" class="block px-3 py-2 rounded-lg hover:bg-slate-100">🧵 Handloom</a>
+            <a href="#grid" class="block px-3 py-2 rounded-lg hover:bg-slate-100">🪵 Woodcraft</a>
+            <a href="#grid" class="block px-3 py-2 rounded-lg hover:bg-slate-100">🥣 Pottery</a>
+            <a href="#grid" class="block px-3 py-2 rounded-lg hover:bg-slate-100">💍 Jewelry</a>
+          </div>
+        </div>
+        <a class="nav-link" href="#upload" data-i18n="nav.upload">Upload</a>
+        <a class="nav-link" href="#gallery" data-i18n="nav.gallery">Gallery</a>
+        <a class="nav-link" href="#about" data-i18n="nav.about">About</a>
+        <button id="toggleDark" class="nav-link" title="Toggle dark">🌙</button>
+        <div class="relative">
+          <button id="cartBtn" class="nav-link text-lg"><i class="fa fa-cart-shopping"></i></button>
+          <span id="cartCount" class="badge absolute -right-2 -top-2">0</span>
+        </div>
+        <button id="openLogin" class="btn-outline text-sm" data-i18n="nav.login">Login</button>
+        <button id="openSignup" class="btn-primary text-sm" data-i18n="nav.create">Create Account</button>
+        <div class="relative">
+          <button class="btn-outline text-xs flex items-center gap-2"><i class="fa fa-globe"></i><span id="langCode">EN</span></button>
+          <div class="absolute right-0 mt-2 w-28 glass-card rounded-xl shadow-elevated p-2 hidden" id="langMenu">
+            <button class="w-full text-left px-3 py-2 rounded-lg hover:bg-slate-100" data-setlang="en">English</button>
+            <button class="w-full text-left px-3 py-2 rounded-lg hover:bg-slate-100" data-setlang="hi">हिंदी</button>
+            <button class="w-full text-left px-3 py-2 rounded-lg hover:bg-slate-100" data-setlang="te">తెలుగు</button>
+          </div>
+        </div>
+      </nav>
+    </div>
+  </header>
+
+  <!-- Hero -->
+  <section id="home" class="max-w-7xl mx-auto px-4 md:px-6 pt-8 md:pt-12">
+    <div class="glass-card rounded-3xl shadow-elevated p-8 md:p-12 grid md:grid-cols-2 gap-8 items-center fade-in">
+      <div>
+        <h1 class="text-3xl md:text-4xl font-extrabold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent" data-i18n="hero.title">Bring artisan stories to the world.</h1>
+        <p class="mt-3 text-slate-700" data-i18n="hero.subtitle">Upload a craft, auto‑generate descriptions in your language, and share to marketplaces in one click.</p>
+        <div class="mt-6 flex gap-3">
+          <a href="#upload" class="btn-primary" data-i18n="hero.ctaUpload">Upload Craft</a>
+          <a href="#grid" class="btn-outline" data-i18n="hero.ctaBrowse">🌎</a>
+        </div>
+      </div>
+      <img alt="hero" class="rounded-2xl w-full h-64 md:h-80 object-cover" src="https://images.unsplash.com/photo-1519710164239-da123dc03ef4?q=80&w=1470&auto=format&fit=crop"/>
+    </div>
+  </section>
+
+  <!-- Product Grid -->
+  <section id="grid" class="max-w-7xl mx-auto px-4 md:px-6 py-10 space-y-6">
+    <div class="flex items-center justify-between">
+      <h2 class="text-2xl font-bold" data-i18n="grid.title">Crafts</h2>
+      <div class="flex items-center gap-2 text-sm">
+        <span class="text-slate-500" data-i18n="grid.sort">Sort</span>
+        <select id="sort" class="border rounded-lg px-2 py-1">
+          <option value="rating">Rating</option>
+          <option value="price">Price</option>
+          <option value="new">New</option>
+        </select>
+      </div>
+    </div>
+    <div id="cards" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6"></div>
+  </section>
+
+  <!-- Upload + AI Panel -->
+  <section id="upload" class="max-w-7xl mx-auto px-4 md:px-6 pb-10">
+    <div class="grid lg:grid-cols-2 gap-8">
+      <!-- Upload card -->
+      <div class="glass-card rounded-3xl shadow-elevated p-6">
+        <h3 class="text-xl font-bold" data-i18n="upload.title">Upload Your Craft</h3>
+        <p class="text-slate-600 mb-4" data-i18n="upload.caption">Image + short note is enough for a beautiful card.</p>
+        <input type="file" accept="image/*" id="fileInput" class="w-full border rounded-xl px-3 py-2 mb-3" />
+        <textarea id="noteInput" rows="4" class="w-full border rounded-xl px-3 py-2 mb-3" placeholder="Describe your craft…"></textarea>
+        <button id="saveBtn" class="btn-primary">💾 <span data-i18n="upload.save">Save Craft</span></button>
+        <p id="uploadHint" class="text-xs text-slate-500 mt-2" data-i18n="upload.hint">Tip: keep notes under 140 chars for social sharing.</p>
+      </div>
+      <!-- AI / Pricing -->
+      <div class="glass-card rounded-3xl shadow-elevated p-6">
+        <h3 class="text-xl font-bold">⚡ <span data-i18n="ai.title">AI Suggestions & Pricing</span></h3>
+        <div class="grid grid-cols-2 gap-4 mt-3">
+          <div><label class="text-sm" data-i18n="ai.material">Material Cost (₹)</label><input type="number" id="materialCost" value="280" class="w-full border rounded-lg px-3 py-2"/></div>
+          <div><label class="text-sm" data-i18n="ai.hours">Hours</label><input type="number" id="hours" value="6" class="w-full border rounded-lg px-3 py-2"/></div>
+          <div><label class="text-sm" data-i18n="ai.rate">Hourly Rate (₹)</label><input type="number" id="hourRate" value="120" class="w-full border rounded-lg px-3 py-2"/></div>
+          <div><label class="text-sm" data-i18n="ai.margin">Margin (%)</label><input type="number" id="margin" value="25" class="w-full border rounded-lg px-3 py-2"/></div>
+        </div>
+        <div class="mt-4 flex gap-3">
+          <button id="regenBtn" class="btn-primary" data-i18n="ai.regen">Regenerate Story</button>
+          <button id="exportBtn" class="btn-outline" data-i18n="ai.export">Export Post Kit</button>
+          <div class="ml-auto flex items-center gap-2 bg-gradient-to-r from-indigo-50 to-purple-50 px-4 py-2 rounded-full text-sm font-semibold">
+            <i class="fa fa-indian-rupee-sign text-indigo-600"></i> <span id="finalPrice">1280</span> INR
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Simple Gallery from uploads -->
+  <section id="gallery" class="max-w-7xl mx-auto px-4 md:px-6 pb-12">
+    <h3 class="text-xl font-bold mb-4" data-i18n="gallery.title">My Craft Gallery</h3>
+    <div id="galleryGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6"></div>
+  </section>
+
+  <!-- About -->
+  <section id="about" class="max-w-7xl mx-auto px-4 md:px-6 pb-14">
+    <div class="glass-card rounded-3xl shadow-elevated p-6">
+      <h3 class="text-xl font-bold" data-i18n="about.title">About</h3>
+      <p class="text-slate-700 mt-2" data-i18n="about.body">Hackathon prototype to empower local artisans with AI storytelling, pricing help, and one‑click marketplace‑ready content. Built as a single‑file web app.</p>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="bg-white/80 border-t mt-auto">
+    <div class="max-w-7xl mx-auto px-4 md:px-6 py-6 flex flex-col md:flex-row items-center justify-between text-sm text-slate-600 gap-3">
+      <p>© 2025 ArtConnect AI</p>
+      <div class="flex gap-4">
+        <a href="#" class="nav-link">Privacy</a>
+        <a href="#" class="nav-link">Terms</a>
+        <a href="#" class="nav-link">Contact</a>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Auth Modals -->
+  <div id="modalBackdrop" class="fixed inset-0 bg-black/40 hidden-imp z-50"></div>
+  <div id="loginModal" class="fixed inset-0 grid place-items-center z-50 hidden-imp">
+    <div class="glass-card shadow-elevated rounded-2xl p-6 w-[90%] max-w-md">
+      <div class="flex items-center justify-between mb-2"><h4 class="text-lg font-bold" data-i18n="auth.login">Login</h4><button class="nav-link text-xl" data-closemodal>&times;</button></div>
+      <input class="w-full border rounded-lg px-3 py-2 mb-3" placeholder="Email"/>
+      <input type="password" class="w-full border rounded-lg px-3 py-2 mb-4" placeholder="Password"/>
+      <button class="btn-primary w-full" data-i18n="auth.loginBtn">Sign in</button>
+    </div>
+  </div>
+  <div id="signupModal" class="fixed inset-0 grid place-items-center z-50 hidden-imp">
+    <div class="glass-card shadow-elevated rounded-2xl p-6 w-[90%] max-w-md">
+      <div class="flex items-center justify-between mb-2"><h4 class="text-lg font-bold" data-i18n="auth.create">Create Account</h4><button class="nav-link text-xl" data-closemodal>&times;</button></div>
+      <input class="w-full border rounded-lg px-3 py-2 mb-3" placeholder="Full name"/>
+      <input class="w-full border rounded-lg px-3 py-2 mb-3" placeholder="Email"/>
+      <input type="password" class="w-full border rounded-lg px-3 py-2 mb-4" placeholder="Password"/>
+      <button class="btn-primary w-full" data-i18n="auth.createBtn">Create account</button>
+    </div>
+  </div>
+
+  <!-- Toast -->
+  <div id="toast" class="hidden-imp"></div>
+
+  <!-- Templates -->
+  <template id="cardTemplate">
+    <div class="glass-card rounded-3xl shadow-elevated overflow-hidden fade-in">
+      <div class="relative">
+        <img class="h-64 w-full object-cover" />
+        <div class="absolute left-4 top-4 flex items-center gap-2">
+          <span class="bg-indigo-600 text-white text-[11px] font-medium rounded-full px-3 py-1">AI</span>
+          <span class="bg-white/90 text-[11px] font-semibold rounded-full px-3 py-1 shadow flex items-center gap-1"><i class="fa fa-star text-yellow-500"></i> <span class="rating">4.8</span></span>
+        </div>
+        <button class="absolute right-4 top-4 bg-white rounded-full shadow-lg p-2 hover:bg-rose-100"><i class="fa fa-heart text-rose-500"></i></button>
+      </div>
+      <div class="p-5 space-y-3">
+        <div class="flex items-center justify-between">
+          <h3 class="title text-lg font-bold"></h3>
+          <div class="flex items-center gap-2 bg-gradient-to-r from-indigo-50 to-purple-50 px-3 py-1.5 rounded-full text-xs font-semibold"><i class="fa fa-indian-rupee-sign text-indigo-600"></i><span class="price">—</span> INR</div>
+        </div>
+        <p class="story text-slate-700 text-sm"></p>
+        <div class="flex flex-wrap gap-2">
+          <span class="chip">#Handmade</span><span class="chip">#IndianCraft</span><span class="chip">#Sustainable</span>
+        </div>
+      </div>
+      <div class="p-5 flex items-center justify-between bg-slate-50/80">
+        <div class="flex gap-3">
+          <button class="btn-primary text-sm addCart"><i class="fa fa-cart-shopping mr-2"></i><span data-i18n="card.add">Add to Cart</span></button>
+          <button class="btn-outline text-sm share"><i class="fa fa-share mr-2"></i><span data-i18n="card.share">Share</span></button>
+        </div>
+        <button class="text-indigo-700 hover:text-indigo-900 text-sm font-medium flex items-center gap-2"><i class="fa fa-globe"></i> <span data-i18n="card.market">Marketplace</span></button>
+      </div>
+    </div>
+  </template>
+
+  <script>
+    // ---------- i18n dictionary ----------
+    const i18n = {
+      en: {
+        'nav.home':'Home','nav.categories':'Categories','nav.upload':'Upload','nav.gallery':'Gallery','nav.about':'About','nav.login':'Login','nav.create':'Create Account',
+        'hero.title':'Bring artisan stories to the world.','hero.subtitle':'Upload a craft, auto‑generate descriptions in your language, and share to marketplaces in one click.','hero.ctaUpload':'Upload 📥','hero.ctaBrowse':'Crafts 🌎',
+        'grid.title':'Crafts','grid.sort':'Sort',
+        'upload.title':'Upload Your Craft','upload.caption':'Image + short note is enough for a beautiful card.','upload.save':'Save Craft','upload.hint':'Tip: keep notes under 140 chars for social sharing.',
+        'ai.title':'AI Suggestions & Pricing','ai.material':'Material Cost (₹)','ai.hours':'Hours','ai.rate':'Hourly Rate (₹)','ai.margin':'Margin (%)','ai.regen':'Regenerate Story','ai.export':'Export Post Kit',
+        'gallery.title':'My Craft Gallery 🖼️',
+        'about.title':'About ArtConnect AI','about.body':'Hackathon prototype to empower local artisans with AI storytelling, pricing help, and one‑click marketplace‑ready content. Built as a single‑file web app.',
+        'auth.login':'Login','auth.create':'Create Account','auth.loginBtn':'Sign in','auth.createBtn':'Create account',
+        'card.add':'Add to Cart','card.share':'Share','card.market':'Marketplace'
+      },
+      hi: {
+        'nav.home':'होम','nav.categories':'श्रेणियाँ','nav.upload':'अपलोड','nav.gallery':'गैलरी','nav.about':'परिचय','nav.login':'लॉगिन','nav.create':'खाता बनाएँ',
+        'hero.title':'कारीगरों की कहानियाँ दुनिया तक पहुँचाएँ।','hero.subtitle':'कला की फोटो अपलोड करें, अपनी भाषा में विवरण पाएँ और एक क्लिक में साझा करें।','hero.ctaUpload':'क्राफ्ट अपलोड करें','hero.ctaBrowse':'क्राफ्ट देखें',
+        'grid.title':'चयनित क्राफ्ट','grid.sort':'क्रम',
+        'upload.title':'अपना क्राफ्ट अपलोड करें','upload.caption':'तस्वीर + छोटा नोट सुंदर कार्ड के लिए पर्याप्त है।','upload.save':'सेव करें','upload.hint':'टिप: सोशल शेयरिंग के लिए नोट 140 वर्णों के भीतर रखें।',
+        'ai.title':'एआई सुझाव व मूल्य','ai.material':'सामग्री लागत (₹)','ai.hours':'घंटे','ai.rate':'प्रति घंटा दर (₹)','ai.margin':'मार्जिन (%)','ai.regen':'कहानी पुनः बनाएं','ai.export':'पोस्ट किट निर्यात',
+        'gallery.title':'मेरी गैलरी',
+        'about.title':'आर्टकनेक्ट एआई के बारे में','about.body':'स्थानीय कारीगरों को एआई स्टोरीटेलिंग, मूल्य निर्धारण मदद और एक‑क्लिक मार्केटप्लेस कंटेंट देने वाला सिंगल‑फाइल वेब ऐप प्रोटोटाइप।',
+        'auth.login':'लॉगिन','auth.create':'खाता बनाएँ','auth.loginBtn':'साइन इन','auth.createBtn':'खाता बनाएँ',
+        'card.add':'कार्ट में जोड़ें','card.share':'शेयर करें','card.market':'मार्केटप्लेस'
+      },
+      te: {
+        'nav.home':'హోమ్','nav.categories':'వర్గాలు','nav.upload':'అప్‌లోడ్','nav.gallery':'గ్యాలరీ','nav.about':'గురించి','nav.login':'లాగిన్','nav.create':'ఖాతా సృష్టించు',
+        'hero.title':'కార్మికుల కథలను ప్రపంచానికి చేర్చండి.','hero.subtitle':'కళ ఫోటోను అప్‌లోడ్ చేసి, మీ భాషలో వివరణ పొందండి మరియు ఒక క్లిక్‌తో పంచుకోండి.','hero.ctaUpload':'క్రాఫ్ట్ అప్‌లోడ్','hero.ctaBrowse':'క్రాఫ్ట్స్ చూడండి',
+        'grid.title':'ఎంచుకున్న క్రాఫ్ట్స్','grid.sort':'క్రమం',
+        'upload.title':'మీ క్రాఫ్ట్‌ను అప్‌లోడ్ చేయండి','upload.caption':'ఫోటో + చిన్న నోట్ చాలు.','upload.save':'సేవ్ చేయండి','upload.hint':'సలహా: 140 అక్షరాల లోపల నోట్ ఉంచండి.',
+        'ai.title':'ఏఐ సూచనలు & ధర','ai.material':'మెటీరియల్ ఖర్చు (₹)','ai.hours':'గంటలు','ai.rate':'గంట రేటు (₹)','ai.margin':'మార్జిన్ (%)','ai.regen':'కథ మళ్లీ సృష్టించు','ai.export':'పోస్ట్ కిట్ ఎగుమతి',
+        'gallery.title':'నా గ్యాలరీ',
+        'about.title':'ఆర్ట్ కనెక్ట్ ఏఐ గురించి','about.body':'స్థానిక కళాకారులకు ఏఐ స్టోరీటెల్లింగ్, ధర సహాయం, ఒక క్లిక్ మార్కెట్‌ప్లేస్ కంటెంట్ తో సింగిల్ ఫైల్ వెబ్ యాప్ ప్రోటోటైప్.',
+        'auth.login':'లాగిన్','auth.create':'ఖాతా సృష్టించు','auth.loginBtn':'సైన్ ఇన్','auth.createBtn':'ఖాతా సృష్టించు',
+        'card.add':'కార్ట్‌లో చేర్చు','card.share':'షేర్','card.market':'మార్కెట్‌ప్లేస్'
+      }
+    };
+
+    // ---------- language switching ----------
+    let currentLang = 'en';
+    const langBtn = document.getElementById('langCode');
+    const langMenu = document.getElementById('langMenu');
+    document.addEventListener('click', (e)=>{
+      if(e.target.closest('[data-setlang]')){
+        const lang = e.target.getAttribute('data-setlang');
+        setLang(lang);
+        langMenu.classList.add('hidden');
+      } else if(e.target.closest('#langMenu')){
+        // stay open
+      } else if(e.target.closest('#langCode') || e.target.closest('[class*="fa-globe"]')){
+        // no-op
+      }
+    });
+    // open menu on globe click (wrapper is previous sibling button)
+    document.querySelectorAll('button.btn-outline').forEach(btn=>{
+      if(btn.querySelector('#langCode')){
+        btn.addEventListener('click', ()=> langMenu.classList.toggle('hidden'));
+      }
+    });
+
+    function setLang(lang){
+      currentLang = lang; langBtn.textContent = lang.toUpperCase();
+      const dict = i18n[lang] || i18n.en;
+      document.querySelectorAll('[data-i18n]').forEach(el=>{
+        const key = el.getAttribute('data-i18n');
+        if(dict[key]) el.textContent = dict[key];
+      });
+      toast(`Language: ${lang.toUpperCase()}`);
+    }
+
+    // ---------- sample data & grid ----------
+    const sample = [
+      {
+        img: 'https://apisap.fabindia.com/medias/20213240-02.jpg?context=bWFzdGVyfGltYWdlc3w5ODA4MHxpbWFnZS9qcGVnfGFEVmlMMmhqT1M4NE16SXlNRFl5TVRrNE16YzNOQzh5TURJeE16STBNRjh3TWk1cWNHY3xmNGI3OWRkNzg1MzMwNjExZDM5ODExMDI3YzJjYTllNTJkOWY2MmU3ZmFmMzU1Nzc0ZGZiZTI5OTc1OWQ1YmU2&aio=w-500',
+        title: {
+          en: 'Hand-woven Ikat Cotton Stole — Golconda Heritage',
+          hi: 'हैंडलूम इकट कॉटन दुपट्टा — गोलकोंडा',
+          te: 'చేతితో నేసిన ఇకాట్ కాటన్ స్టోల్ — గోల్కొండ'
+        },
+        story: {
+          en: 'Woven on a traditional loom with natural dyes and iconic Ikat patterns.',
+          hi: 'पारंपरिक करघे पर प्राकृतिक रंगों से बुना गया इकट पैटर्न।',
+          te: 'సాంప్రదాయ మగ్గంపై సహజ రంగులతో నేసిన ఇకాట్ నమూనా.'
+        },
+        price: 1280, rating: 4.8
+      },
+      {
+        img: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTzED8o1uG6hIK2USV_0UlS5AzgMu2uf9H94g&s',
+        title: { en: 'Terracotta Pot — Village Studio', hi: 'टेरीकोटा घड़ा — ग्राम स्टूडियो', te: 'టెర్రాకోట కుండ — విలేజ్ స్టూడియో' },
+        story: { en: 'Hand-shaped and kiln-fired for a rustic finish.', hi: 'हस्त-निर्मित, भट्ठी में पकाया गया देहाती स्पर्श।', te: 'చేతితో చేసి, భట్టీలో కాల్చిన గ్రామీణ ముగింపు.' },
+        price: 640, rating: 4.6
+      },
+      {
+        img: 'https://images.unsplash.com/photo-1522312346375-d1a52e2b99b3?q=80&w=1470&auto=format&fit=crop',
+        title: { en: 'Silver Tribal Earrings', hi: 'ट्राइबल सिल्वर ईयररिंग्स', te: 'సిల్వర్ ట్రైబల్ ఇయర్‌రింగ్స్' },
+        story: { en: 'Inspired by ancient motifs from central India.', hi: 'मध्य भारत की प्राचीन आकृतियों से प्रेरित।', te: 'మధ్య భారత పురాతన ప్రతీకల నుండి స్ఫూర్తి.' },
+        price: 980, rating: 4.7
+      }
+    ];
+
+    const grid = document.getElementById('cards');
+    const tpl = document.getElementById('cardTemplate');
+
+    function renderGrid(){
+      grid.innerHTML = '';
+      sample.forEach(item=>{
+        const node = tpl.content.firstElementChild.cloneNode(true);
+        node.querySelector('img').src = item.img;
+        node.querySelector('.title').textContent = item.title[currentLang] || item.title.en;
+        node.querySelector('.story').textContent = item.story[currentLang] || item.story.en;
+        node.querySelector('.price').textContent = item.price.toLocaleString('en-IN');
+        node.querySelector('.rating').textContent = item.rating.toFixed(1);
+        node.querySelector('.addCart').addEventListener('click', ()=> addToCart(item));
+        node.querySelector('.share').addEventListener('click', ()=> shareCard(item));
+        grid.appendChild(node);
+      });
+    }
+
+    // ---------- upload -> gallery ----------
+    const fileInput = document.getElementById('fileInput');
+    const noteInput = document.getElementById('noteInput');
+    const saveBtn = document.getElementById('saveBtn');
+    const galleryGrid = document.getElementById('galleryGrid');
+    let uploadedImage = '';
+
+    fileInput?.addEventListener('change', e=>{
+      const f = e.target.files[0]; if(!f) return;
+      const r = new FileReader(); r.onload = ev => uploadedImage = ev.target.result; r.readAsDataURL(f);
+    });
+
+    saveBtn?.addEventListener('click', ()=>{
+      const note = (noteInput.value || '').trim();
+      if(!uploadedImage || !note){ toast('⚠️ Upload an image and add a short note.'); return; }
+      const card = document.createElement('div');
+      card.className = 'glass-card rounded-2xl p-4 shadow-elevated';
+      card.innerHTML = `<img src="${uploadedImage}" class="w-full h-48 object-cover rounded-lg mb-3"/><p class="text-slate-700 text-sm">${note}</p>`;
+      galleryGrid.appendChild(card);
+      toast('✅ Added to gallery');
+      fileInput.value = ''; noteInput.value=''; uploadedImage='';
+    });
+
+    // ---------- pricing calc ----------
+    const priceBox = document.getElementById('finalPrice');
+    const materialCost = document.getElementById('materialCost');
+    const hours = document.getElementById('hours');
+    const hourRate = document.getElementById('hourRate');
+    const margin = document.getElementById('margin');
+    function updatePrice(){
+      const base = (+materialCost.value||0) + ((+hours.value||0) * (+hourRate.value||0));
+      const price = base * (1 + (+margin.value||0)/100);
+      priceBox.textContent = Math.max(1, Math.round(price)).toString();
+    }
+    [materialCost, hours, hourRate, margin].forEach(el=> el?.addEventListener('input', updatePrice));
+    updatePrice();
+
+    // ---------- cart + share ----------
+    let cart = [];
+    const cartCount = document.getElementById('cartCount');
+    function addToCart(item){ cart.push(item); cartCount.textContent = cart.length; toast('🛒 Added to cart'); }
+    async function shareCard(item){
+      const text = `${item.title.en} — ₹${item.price}\n${item.story.en}`;
+      try{
+        if(navigator.share){ await navigator.share({ title: 'ArtConnect AI', text, url: location.href }); }
+        else { await navigator.clipboard.writeText(text); toast('🔗 Copied details to clipboard'); }
+      } catch(e){}
+    }
+
+    // ---------- sort ----------
+    document.getElementById('sort').addEventListener('change', (e)=>{
+      const v = e.target.value;
+      if(v==='price') sample.sort((a,b)=> a.price-b.price);
+      else if(v==='rating') sample.sort((a,b)=> b.rating-a.rating);
+      else sample.reverse();
+      renderGrid();
+    });
+
+    // ---------- auth modals ----------
+    const openLogin = document.getElementById('openLogin');
+    const openSignup = document.getElementById('openSignup');
+    const loginModal = document.getElementById('loginModal');
+    const signupModal = document.getElementById('signupModal');
+    const backdrop = document.getElementById('modalBackdrop');
+    const closeBtns = document.querySelectorAll('[data-closemodal]');
+
+    function openModal(el){ el.classList.remove('hidden-imp'); backdrop.classList.remove('hidden-imp'); }
+    function closeModal(){ loginModal.classList.add('hidden-imp'); signupModal.classList.add('hidden-imp'); backdrop.classList.add('hidden-imp'); }
+    openLogin.addEventListener('click', ()=> openModal(loginModal));
+    openSignup.addEventListener('click', ()=> openModal(signupModal));
+    backdrop.addEventListener('click', closeModal); closeBtns.forEach(b=> b.addEventListener('click', closeModal));
+
+    // ---------- toast ----------
+    const toastBox = document.getElementById('toast');
+    let toastTimer;
+    function toast(msg){
+      clearTimeout(toastTimer);
+      toastBox.className = 'fade-in';
+      toastBox.innerHTML = `<div class="glass-card shadow-elevated rounded-xl px-4 py-3">${msg}</div>`;
+      toastTimer = setTimeout(()=> toastBox.classList.add('hidden-imp'), 2200);
+      toastBox.classList.remove('hidden-imp');
+    }
+
+    // ---------- dark mode ----------
+    document.getElementById('toggleDark').addEventListener('click', ()=>{
+      document.documentElement.classList.toggle('dark');
+      document.body.classList.toggle('bg-slate-900');
+      document.body.classList.toggle('text-slate-100');
+      toast('🌓 Theme toggled');
+    });
+
+    // ---------- init ----------
+    setLang('en');
+    renderGrid();
+  </script>
+</body>
+</html>
